@@ -157,41 +157,50 @@ public struct AnyEncodable: Encodable {
 }
 
 /// Singleton de logger
+@MainActor
 public final class LoggerSingleton {
-    @MainActor public static let shared = LoggerSingleton()
-    private let logger: Logger
+    public static var shared: LoggerSingleton?
+    private var logger: Logger?
     private let jsonFormatter = JSONFormatter()
-    nonisolated(unsafe) public static var version = "v1.0.0"
-    nonisolated(unsafe) public static var label = "tech.vksoftware.example"
-    nonisolated(unsafe) public static var dateTimeFormat = "YYY-MM-dd HH:mm:ss"
+    private var version: String = "1.0.0"
+    private var label: String = "tech.vksoftware.example"
+    private var dateTimeFormat: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
 
-    private init() {
-        let lvlStr = ProcessInfo.processInfo.environment["LOG_LEVEL"] ?? "info"
-        let level: Logger.Level = {
-            switch lvlStr.uppercased() {
-            case "INFO":     return .info
-            case "WARNING":  return .warning
-            case "ERROR":    return .error
-            default:         return .debug
+    public init(level: String, version: String, label: String, dateTimeFormat: String) {
+        if LoggerSingleton.shared == nil {
+            self.version = version
+            self.label = label
+            self.dateTimeFormat = dateTimeFormat
+
+            let level: Logger.Level = {
+                switch level.uppercased() {
+                case "INFO":     return .info
+                case "WARNING":  return .warning
+                case "ERROR":    return .error
+                default:         return .debug
+                }
+            }()
+
+            LoggingSystem.bootstrap { label in
+                let file = FileLogHandler(
+                    label: label,
+                    version: version,
+                    dtFormat: dateTimeFormat
+                )
+                let console = ConsoleLogHandler(
+                    label: label,
+                    level: level,
+                    version: version,
+                    dtFormat: dateTimeFormat
+                )
+                return MultiplexLogHandler([console, file])
             }
-        }()
 
-        LoggingSystem.bootstrap { label in
-            let file = FileLogHandler(
-                label: label,
-                version: LoggerSingleton.version,
-                dtFormat: LoggerSingleton.dateTimeFormat
-            )
-            let console = ConsoleLogHandler(
-                label: label,
-                level: level,
-                version: LoggerSingleton.version,
-                dtFormat: LoggerSingleton.dateTimeFormat
-            )
-            return MultiplexLogHandler([console, file])
+            self.logger = Logger(label: label)
+            LoggerSingleton.shared = self
+        } else {
+            fatalError("O singleton de logger já foi inicializado. Utilize o LoggerSingleton.shared para obter o logger.")
         }
-
-        self.logger = Logger(label: LoggerSingleton.label)
     }
 
     // MARK: Métodos de logging
@@ -203,10 +212,10 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger.debug("\(msg) \(payload)", metadata: metadata)
+            logger?.debug("\(msg) \(payload)", metadata: metadata)
             return
         }
-        logger.debug("\(msg)", metadata: metadata)
+        logger?.debug("\(msg)", metadata: metadata)
     }
 
     public func debug(_ msg: String, trace: String) {
@@ -225,10 +234,10 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger.info("\(msg) \(payload)", metadata: metadata)
+            logger?.info("\(msg) \(payload)", metadata: metadata)
             return
         }
-        logger.info("\(msg)", metadata: metadata)
+        logger?.info("\(msg)", metadata: metadata)
     }
 
     public func info(_ msg: String, trace: String) {
@@ -247,10 +256,10 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger.warning("\(msg) \(payload)", metadata: metadata)
+            logger?.warning("\(msg) \(payload)", metadata: metadata)
             return
         }
-        logger.warning("\(msg)", metadata: metadata)
+        logger?.warning("\(msg)", metadata: metadata)
     }
 
     public func warning(_ msg: String, trace: String) {
@@ -266,7 +275,7 @@ public final class LoggerSingleton {
         if let traceSafe = trace {
             metadata["trace"] = .string(traceSafe)
         }
-        logger.error("\(error.localizedDescription)", metadata: metadata)
+        logger?.error("\(error.localizedDescription)", metadata: metadata)
     }
 
     public func error(_ error: Error) {
