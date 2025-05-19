@@ -25,7 +25,7 @@ struct FileLogHandler: LogHandler {
         self.dateFormatter.dateFormat = dtFormat
 
         // caminho do arquivo de log
-        let path = "/var/log/\(label).log"
+        let path = "/tmp/\(label).log"
         let url = URL(fileURLWithPath: path)
         let fileManager = FileManager.default
 
