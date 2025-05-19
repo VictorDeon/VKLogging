@@ -4,23 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "VKLoggingPublicLibrary",
+    name: "VKLogging",
     platforms: [.macOS(.v15), .iOS(.v15)],
     products: [
-        .library(
-            name: "VKLoggingPublicLibrary",
-            targets: ["VKLoggingPublicLibrary"]
-        )
+        .library(name: "VKLogging", targets: ["VKLogging"]),
+        .executable(name: "VKLoggingCLI", targets: ["CLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
     ],
     targets: [
         .target(
-            name: "VKLoggingPublicLibrary",
+            name: "VKLogging",
             dependencies: [
                 .product(name: "Logging", package: "swift-log")
             ]
         ),
+        .executableTarget(
+            name: "CLI",
+            dependencies: ["VKLogging"]
+          ),
     ]
 )

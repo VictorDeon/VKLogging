@@ -19,13 +19,13 @@ struct FileLogHandler: LogHandler {
         return formatter
     }()
 
-    init(label: String, version: String, dtFormat: String) {
+    init(label: String, version: String, dtFormat: String, destination: String) {
         self.label = label
         self.version = version
         self.dateFormatter.dateFormat = dtFormat
 
         // caminho do arquivo de log
-        let path = "/tmp/\(label).log"
+        let path = destination
         let url = URL(fileURLWithPath: path)
         let fileManager = FileManager.default
 
@@ -101,7 +101,6 @@ struct ConsoleLogHandler: LogHandler {
         set { metadata[key] = newValue }
     }
 
-    // swiftlint:disable:next function_parameter_count
     func log(
       level: Logger.Level,
       message: Logger.Message,
@@ -156,21 +155,54 @@ public struct AnyEncodable: Encodable {
     }
 }
 
-/// Singleton de logger
 @MainActor
 public final class LoggerSingleton {
+    /// Instancia única de log
     public static var shared: LoggerSingleton?
     private var logger: Logger?
     private let jsonFormatter = JSONFormatter()
-    private var version: String = "1.0.0"
-    private var label: String = "tech.vksoftware.example"
-    private var dateTimeFormat: String = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
 
-    public init(level: String, version: String, label: String, dateTimeFormat: String) {
+    /// Singleton de logger
+    /// - Parameters:
+    ///     - level: Level do log, pode ser: debug, info, warning ou error.
+    ///     - version: Versão que ira aparecer nos logs.
+    ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
+    ///     - dateTimeFormat: Formato da data e hora do log.
+    ///     - destination: Para onde vai o log dentro do sistema.
+    public init(level: String, version: String?, label: String?, dateTimeFormat: String?, destination: String?) {
+        self.initialize(level, version, label, dateTimeFormat, destination)
+    }
+
+    /// Singleton de logger
+    /// - Parameters:
+    ///     - level: Level do log, pode ser: debug, info, warning ou error.
+    ///     - version: Versão que ira aparecer nos logs.
+    ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
+    ///     - dateTimeFormat: Formato da data e hora do log.
+    public init(level: String, version: String?, label: String?, dateTimeFormat: String?) {
+        self.initialize(level, version, label, dateTimeFormat, nil)
+    }
+
+    /// Singleton de logger
+    /// - Parameters:
+    ///     - level: Level do log, pode ser: debug, info, warning ou error.
+    ///     - version: Versão que ira aparecer nos logs.
+    ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
+    public init(level: String, version: String?, label: String?) {
+        self.initialize(level, version, label, nil, nil)
+    }
+
+    private func initialize(
+        _ level: String,
+        _ version: String?,
+        _ label: String?,
+        _ dateTimeFormat: String?,
+        _ destination: String?) {
         if LoggerSingleton.shared == nil {
-            self.version = version
-            self.label = label
-            self.dateTimeFormat = dateTimeFormat
+            let version = version ?? "v1.0.0"
+            let label = label ?? "tech.vksoftware.example"
+            let dateTimeFormat = dateTimeFormat ?? "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            let destination = destination ?? "/tmp/\(label).log"
 
             let level: Logger.Level = {
                 switch level.uppercased() {
@@ -185,7 +217,8 @@ public final class LoggerSingleton {
                 let file = FileLogHandler(
                     label: label,
                     version: version,
-                    dtFormat: dateTimeFormat
+                    dtFormat: dateTimeFormat,
+                    destination: destination
                 )
                 let console = ConsoleLogHandler(
                     label: label,
@@ -203,7 +236,11 @@ public final class LoggerSingleton {
         }
     }
 
-    // MARK: Métodos de logging
+    /// Gera log de nivel debug
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
+    ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func debug(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
@@ -212,20 +249,32 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.debug("\(msg) \(payload)", metadata: metadata)
+            logger?.debug("\(msg)\n > \(payload)", metadata: metadata)
             return
         }
         logger?.debug("\(msg)", metadata: metadata)
     }
 
+    /// Gera log de nivel debug
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
     public func debug(_ msg: String, trace: String) {
         self.debug(msg, trace: trace, json: nil)
     }
 
+    /// Gera log de nivel debug
+    /// - Parameters:
+    ///     - msg: Mensagem do log
     public func debug(_ msg: String) {
         self.debug(msg, trace: nil, json: nil)
     }
 
+    /// Gera log de nivel info
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
+    ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func info(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
@@ -234,20 +283,32 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.info("\(msg) \(payload)", metadata: metadata)
+            logger?.info("\(msg)\n > \(payload)", metadata: metadata)
             return
         }
         logger?.info("\(msg)", metadata: metadata)
     }
 
+    /// Gera log de nivel info
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
     public func info(_ msg: String, trace: String) {
         self.info(msg, trace: trace, json: nil)
     }
 
+    /// Gera log de nivel info
+    /// - Parameters:
+    ///     - msg: Mensagem do log
     public func info(_ msg: String) {
         self.info(msg, trace: nil, json: nil)
     }
 
+    /// Gera log de nivel warning
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
+    ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func warning(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
@@ -256,20 +317,31 @@ public final class LoggerSingleton {
 
         if let jsonSafe = json {
             let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.warning("\(msg) \(payload)", metadata: metadata)
+            logger?.warning("\(msg)\n > \(payload)", metadata: metadata)
             return
         }
         logger?.warning("\(msg)", metadata: metadata)
     }
 
+    /// Gera log de nivel warning
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
     public func warning(_ msg: String, trace: String) {
         self.warning(msg, trace: trace, json: nil)
     }
 
+    /// Gera log de nivel warning
+    /// - Parameters:
+    ///     - msg: Mensagem do log
     public func warning(_ msg: String) {
         self.warning(msg, trace: nil, json: nil)
     }
 
+    /// Gera log de nivel error
+    /// - Parameters:
+    ///     - error: Objeto de Error
+    ///     - trace: Trace ID do log
     public func error(_ error: Error, trace: String?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
@@ -278,6 +350,9 @@ public final class LoggerSingleton {
         logger?.error("\(error.localizedDescription)", metadata: metadata)
     }
 
+    /// Gera log de nivel error
+    /// - Parameters:
+    ///     - error: Objeto de Error
     public func error(_ error: Error) {
         self.error(error, trace: nil)
     }
