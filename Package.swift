@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "VKLogging",
-    platforms: [.macOS(.v15), .iOS(.v15)],
+    platforms: [.macOS(.v13), .iOS(.v15)],
     products: [
         .library(name: "VKLogging", targets: ["VKLogging"]),
         .executable(name: "VKLoggingCLI", targets: ["CLI"]),

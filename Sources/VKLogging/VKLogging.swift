@@ -61,13 +61,13 @@ struct FileLogHandler: LogHandler {
         line: UInt
     ) {
         let timestamp = dateFormatter.string(from: Date())
-        var msg = "\(timestamp) [\(level)] \(version)"
+        var msg = "\(timestamp) [\(level)] \(version):"
 
         if let trace = metadata!["trace"] {
-            msg += " trace=\(trace)"
+            msg = "\(timestamp) [\(level)] \(version) trace=\(trace):"
         }
 
-        msg += ": \(message)\n"
+        msg += " \(message)\n"
 
         guard let data = msg.data(using: .utf8) else { return }
 
@@ -111,13 +111,13 @@ struct ConsoleLogHandler: LogHandler {
       line: UInt
     ) {
         let timestamp = dateFormatter.string(from: Date())
-        var msg = "\(timestamp) [\(level)] \(version)"
+        var msg = "\(timestamp) [\(level)] \(version):"
 
         if let trace = metadata!["trace"] {
-            msg += " trace=\(trace)"
+            msg = "\(timestamp) [\(level)] \(version) trace=\(trace):"
         }
 
-        print(msg + ": \(message)")
+        print(msg + " \(message)")
     }
 }
 
@@ -181,6 +181,16 @@ public final class LoggerSingleton {
     ///     - dateTimeFormat: Formato da data e hora do log.
     public init(level: String, version: String?, label: String?, dateTimeFormat: String?) {
         self.initialize(level, version, label, dateTimeFormat, nil)
+    }
+    
+    /// Singleton de logger
+    /// - Parameters:
+    ///     - level: Level do log, pode ser: debug, info, warning ou error.
+    ///     - version: Versão que ira aparecer nos logs.
+    ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
+    ///     - destination: Para onde vai o log dentro do sistema.
+    public init(level: String, version: String?, label: String?, destination: String?) {
+        self.initialize(level, version, label, nil, destination)
     }
 
     /// Singleton de logger
