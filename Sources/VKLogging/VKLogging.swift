@@ -121,46 +121,11 @@ struct ConsoleLogHandler: LogHandler {
     }
 }
 
-/// JSONFormatter que usa JSONEncoder configurado para ISO8601, sem escapar barras, etc.
-struct JSONFormatter {
-    private let encoder: JSONEncoder
-
-    init() {
-        encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        // Se quiser saída compacta:
-        encoder.outputFormatting = []
-    }
-
-    func stringify(_ dict: [String: AnyEncodable]) -> String {
-        do {
-            let data = try encoder.encode(dict)
-            return String(data: data, encoding: .utf8) ?? ""
-        } catch {
-            return "{\"encoding_error\": \"\(error)\"}"
-        }
-    }
-}
-
-/// AnyEncodable para embrulhar vários tipos em um Encodable genérico
-public struct AnyEncodable: Encodable {
-    private let encodeClosure: (Encoder) throws -> Void
-
-    public init<T: Encodable>(_ wrapped: T) {
-        encodeClosure = wrapped.encode(to:)
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        try encodeClosure(encoder)
-    }
-}
-
 @MainActor
 public final class LoggerSingleton {
     /// Instancia única de log
     public static var shared: LoggerSingleton?
     private var logger: Logger?
-    private let jsonFormatter = JSONFormatter()
 
     /// Singleton de logger
     /// - Parameters:
@@ -251,15 +216,24 @@ public final class LoggerSingleton {
     ///     - msg: Mensagem do log
     ///     - trace: Trace ID do log
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
-    public func debug(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
+    public func debug(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
             metadata["trace"] = .string(traceSafe)
         }
 
         if let jsonSafe = json {
-            let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.debug("\(msg)\n > \(payload)", metadata: metadata)
+            do {
+                let jsonData = try JSONSerialization.data(
+                    withJSONObject: jsonSafe,
+                    options: .prettyPrinted
+                )
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    logger?.debug("\(msg)\n\(jsonString)", metadata: metadata)
+                }
+            } catch {
+                logger?.debug("\(msg)", metadata: metadata)
+            }
             return
         }
         logger?.debug("\(msg)", metadata: metadata)
@@ -285,15 +259,24 @@ public final class LoggerSingleton {
     ///     - msg: Mensagem do log
     ///     - trace: Trace ID do log
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
-    public func info(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
+    public func info(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
             metadata["trace"] = .string(traceSafe)
         }
 
         if let jsonSafe = json {
-            let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.info("\(msg)\n > \(payload)", metadata: metadata)
+            do {
+                let jsonData = try JSONSerialization.data(
+                    withJSONObject: jsonSafe,
+                    options: .prettyPrinted
+                )
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    logger?.info("\(msg)\n\(jsonString)", metadata: metadata)
+                }
+            } catch {
+                logger?.info("\(msg)", metadata: metadata)
+            }
             return
         }
         logger?.info("\(msg)", metadata: metadata)
@@ -319,15 +302,24 @@ public final class LoggerSingleton {
     ///     - msg: Mensagem do log
     ///     - trace: Trace ID do log
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
-    public func warning(_ msg: String, trace: String?, json: [String: AnyEncodable]?) {
+    public func warning(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
         if let traceSafe = trace {
             metadata["trace"] = .string(traceSafe)
         }
 
         if let jsonSafe = json {
-            let payload = jsonFormatter.stringify(jsonSafe)
-            logger?.warning("\(msg)\n > \(payload)", metadata: metadata)
+            do {
+                let jsonData = try JSONSerialization.data(
+                    withJSONObject: jsonSafe,
+                    options: .prettyPrinted
+                )
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    logger?.warning("\(msg)\n\(jsonString)", metadata: metadata)
+                }
+            } catch {
+                logger?.warning("\(msg)", metadata: metadata)
+            }
             return
         }
         logger?.warning("\(msg)", metadata: metadata)
