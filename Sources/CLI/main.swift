@@ -11,3 +11,4 @@ let newLogger = LoggerSingleton.shared
 logger.debug("Ola mundo debug!")
 newLogger!.info("Ola mundo info!", trace: "abcd1234")
 newLogger!.warning("Ola mundo warning!", trace: "abcd1234", json: ["Test": ["value": 1]])
+newLogger!.error("Deu ruim!", trace: "abcd1234", json: ["opaa": 123])

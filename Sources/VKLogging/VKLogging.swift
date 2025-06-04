@@ -339,6 +339,49 @@ public final class LoggerSingleton {
     public func warning(_ msg: String) {
         self.warning(msg, trace: nil, json: nil)
     }
+    
+    /// Gera log de nivel error
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
+    ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
+    public func error(_ msg: String, trace: String?, json: [String: Any]?) {
+        var metadata: [String: Logger.MetadataValue] = [:]
+        if let traceSafe = trace {
+            metadata["trace"] = .string(traceSafe)
+        }
+
+        if let jsonSafe = json {
+            do {
+                let jsonData = try JSONSerialization.data(
+                    withJSONObject: jsonSafe,
+                    options: .prettyPrinted
+                )
+                if let jsonString = String(data: jsonData, encoding: .utf8) {
+                    logger?.error("\(msg)\n\(jsonString)", metadata: metadata)
+                }
+            } catch {
+                logger?.error("\(msg)", metadata: metadata)
+            }
+            return
+        }
+        logger?.error("\(msg)", metadata: metadata)
+    }
+
+    /// Gera log de nivel error
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    ///     - trace: Trace ID do log
+    public func error(_ msg: String, trace: String) {
+        self.error(msg, trace: trace, json: nil)
+    }
+
+    /// Gera log de nivel error
+    /// - Parameters:
+    ///     - msg: Mensagem do log
+    public func error(_ msg: String) {
+        self.error(msg, trace: nil, json: nil)
+    }
 
     /// Gera log de nivel error
     /// - Parameters:
