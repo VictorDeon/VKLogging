@@ -1,9 +1,13 @@
+import Foundation
 import VKLogging
+
+//let destination = URL(fileURLWithPath: "/var/log/tech.vksoftware.app.log")
 
 let logger = LoggerSingleton(
     level: "debug",
     version: "v1.5.5",
     label: "tech.vksoftware.myapp"
+//    destination: destination
 )
 
 let newLogger = LoggerSingleton.shared

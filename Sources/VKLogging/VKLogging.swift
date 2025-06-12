@@ -19,30 +19,34 @@ struct FileLogHandler: LogHandler {
         return formatter
     }()
 
-    init(label: String, version: String, dtFormat: String, destination: String) {
+    init(label: String, version: String, dtFormat: String, destination: URL) {
         self.label = label
         self.version = version
         self.dateFormatter.dateFormat = dtFormat
+        let fm = FileManager.default
 
-        // caminho do arquivo de log
-        let path = destination
-        let url = URL(fileURLWithPath: path)
-        let fileManager = FileManager.default
-
-        // cria o arquivo se não existir
-        if !fileManager.fileExists(atPath: path) {
-            fileManager.createFile(atPath: path, contents: nil, attributes: [
-                // ajuste permissões se necessário
-                FileAttributeKey.posixPermissions: 0o644
-            ])
+        let dirURL = destination.deletingLastPathComponent()
+        // 1. Garante que a pasta exista
+        if !fm.fileExists(atPath: dirURL.path) {
+            do {
+                try fm.createDirectory(at: dirURL, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("Could not create directory \(dirURL.absoluteString): \(error)")
+            }
+        }
+        
+        // 2. Cria o arquivo vazio se ainda não existir
+        if !fm.fileExists(atPath: destination.path) {
+            fm.createFile(atPath: destination.path, contents: nil, attributes: nil)
         }
 
         // abre para escrever e posiciona no fim
         do {
-            fileHandle = try FileHandle(forWritingTo: url)
+            fileHandle = try FileHandle(forWritingTo: destination)
             fileHandle.seekToEndOfFile()
         } catch {
-            fatalError("Não foi possível abrir o arquivo de log em \(path): \(error)")
+            print("Could not open log file at \(destination.path): \(error)")
+            exit(1)
         }
     }
 
@@ -63,7 +67,7 @@ struct FileLogHandler: LogHandler {
         let timestamp = dateFormatter.string(from: Date())
         var msg = "\(timestamp) [\(level)] \(version):"
 
-        if let trace = metadata!["trace"] {
+        if let trace = metadata?["trace"] {
             msg = "\(timestamp) [\(level)] \(version) trace=\(trace):"
         }
 
@@ -113,7 +117,7 @@ struct ConsoleLogHandler: LogHandler {
         let timestamp = dateFormatter.string(from: Date())
         var msg = "\(timestamp) [\(level)] \(version):"
 
-        if let trace = metadata!["trace"] {
+        if let trace = metadata?["trace"] {
             msg = "\(timestamp) [\(level)] \(version) trace=\(trace):"
         }
 
@@ -134,7 +138,7 @@ public final class LoggerSingleton {
     ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
     ///     - dateTimeFormat: Formato da data e hora do log.
     ///     - destination: Para onde vai o log dentro do sistema.
-    public init(level: String, version: String?, label: String?, dateTimeFormat: String?, destination: String?) {
+    public init(level: String, version: String?, label: String?, dateTimeFormat: String?, destination: URL?) {
         self.initialize(level, version, label, dateTimeFormat, destination)
     }
 
@@ -154,7 +158,7 @@ public final class LoggerSingleton {
     ///     - version: Versão que ira aparecer nos logs.
     ///     - label: Nome do arquivo que ira aparecer em /tmp/<label>.log.
     ///     - destination: Para onde vai o log dentro do sistema.
-    public init(level: String, version: String?, label: String?, destination: String?) {
+    public init(level: String, version: String?, label: String?, destination: URL?) {
         self.initialize(level, version, label, nil, destination)
     }
 
@@ -172,12 +176,15 @@ public final class LoggerSingleton {
         _ version: String?,
         _ label: String?,
         _ dateTimeFormat: String?,
-        _ destination: String?) {
+        _ destination: URL?) {
         if LoggerSingleton.shared == nil {
             let version = version ?? "v1.0.0"
             let label = label ?? "tech.vksoftware.example"
             let dateTimeFormat = dateTimeFormat ?? "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-            let destination = destination ?? "/tmp/\(label).log"
+            let destination: URL = destination ?? FileManager.default.temporaryDirectory
+              .appendingPathComponent("tech.rocketman.tempadmin.log")
+            
+            print("Log save at: \(destination.path)")
 
             let level: Logger.Level = {
                 switch level.uppercased() {
@@ -207,7 +214,8 @@ public final class LoggerSingleton {
             self.logger = Logger(label: label)
             LoggerSingleton.shared = self
         } else {
-            fatalError("O singleton de logger já foi inicializado. Utilize o LoggerSingleton.shared para obter o logger.")
+            print("O singleton de logger já foi inicializado. Utilize o LoggerSingleton.shared para obter o logger.")
+            exit(1)
         }
     }
 
