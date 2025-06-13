@@ -183,8 +183,6 @@ public final class LoggerSingleton {
             let dateTimeFormat = dateTimeFormat ?? "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
             let destination: URL = destination ?? FileManager.default.temporaryDirectory
               .appendingPathComponent("tech.rocketman.tempadmin.log")
-            
-            print("Log save at: \(destination.path)")
 
             let level: Logger.Level = {
                 switch level.uppercased() {
