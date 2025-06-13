@@ -129,6 +129,7 @@ struct ConsoleLogHandler: LogHandler {
 public final class LoggerSingleton {
     /// Instancia única de log
     public static var shared: LoggerSingleton?
+    public var logPath: String = ""
     private var logger: Logger?
 
     /// Singleton de logger
@@ -181,7 +182,7 @@ public final class LoggerSingleton {
             let version = version ?? "v1.0.0"
             let label = label ?? "tech.vksoftware.example"
             let dateTimeFormat = dateTimeFormat ?? "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-            let destination: URL = destination ?? FileManager.default.temporaryDirectory
+            let destinationPath: URL = destination ?? FileManager.default.temporaryDirectory
               .appendingPathComponent("tech.rocketman.tempadmin.log")
 
             let level: Logger.Level = {
@@ -198,7 +199,7 @@ public final class LoggerSingleton {
                     label: label,
                     version: version,
                     dtFormat: dateTimeFormat,
-                    destination: destination
+                    destination: destinationPath
                 )
                 let console = ConsoleLogHandler(
                     label: label,
@@ -209,6 +210,7 @@ public final class LoggerSingleton {
                 return MultiplexLogHandler([console, file])
             }
 
+            self.logPath = destinationPath.path
             self.logger = Logger(label: label)
             LoggerSingleton.shared = self
         } else {
