@@ -269,24 +269,24 @@ public final class LoggerSingleton {
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func info(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
-        if let traceSafe = trace {
-            metadata["trace"] = .string(traceSafe)
-        }
+//        if let traceSafe = trace {
+//            metadata["trace"] = .string(traceSafe)
+//        }
 
-        if let jsonSafe = json {
-            do {
-                let jsonData = try JSONSerialization.data(
-                    withJSONObject: jsonSafe,
-                    options: .prettyPrinted
-                )
-                if let jsonString = String(data: jsonData, encoding: .utf8) {
-                    logger?.info("\(msg)\n\(jsonString)", metadata: metadata)
-                }
-            } catch {
-                logger?.info("\(msg)", metadata: metadata)
-            }
-            return
-        }
+//        if let jsonSafe = json {
+//            do {
+//                let jsonData = try JSONSerialization.data(
+//                    withJSONObject: jsonSafe,
+//                    options: .prettyPrinted
+//                )
+//                if let jsonString = String(data: jsonData, encoding: .utf8) {
+//                    logger?.info("\(msg)\n\(jsonString)", metadata: metadata)
+//                }
+//            } catch {
+//                logger?.info("\(msg)", metadata: metadata)
+//            }
+//            return
+//        }
         logger?.info("\(msg)", metadata: metadata)
     }
 
@@ -312,24 +312,24 @@ public final class LoggerSingleton {
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func warning(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
-        if let traceSafe = trace {
-            metadata["trace"] = .string(traceSafe)
-        }
+//        if let traceSafe = trace {
+//            metadata["trace"] = .string(traceSafe)
+//        }
 
-        if let jsonSafe = json {
-            do {
-                let jsonData = try JSONSerialization.data(
-                    withJSONObject: jsonSafe,
-                    options: .prettyPrinted
-                )
-                if let jsonString = String(data: jsonData, encoding: .utf8) {
-                    logger?.warning("\(msg)\n\(jsonString)", metadata: metadata)
-                }
-            } catch {
-                logger?.warning("\(msg)", metadata: metadata)
-            }
-            return
-        }
+//        if let jsonSafe = json {
+//            do {
+//                let jsonData = try JSONSerialization.data(
+//                    withJSONObject: jsonSafe,
+//                    options: .prettyPrinted
+//                )
+//                if let jsonString = String(data: jsonData, encoding: .utf8) {
+//                    logger?.warning("\(msg)\n\(jsonString)", metadata: metadata)
+//                }
+//            } catch {
+//                logger?.warning("\(msg)", metadata: metadata)
+//            }
+//            return
+//        }
         logger?.warning("\(msg)", metadata: metadata)
     }
 
@@ -355,9 +355,9 @@ public final class LoggerSingleton {
     ///     - json: Dicionarios com chave e valor que pode ser inserido no log,
     public func error(_ msg: String, trace: String?, json: [String: Any]?) {
         var metadata: [String: Logger.MetadataValue] = [:]
-        if let traceSafe = trace {
-            metadata["trace"] = .string(traceSafe)
-        }
+//        if let traceSafe = trace {
+//            metadata["trace"] = .string(traceSafe)
+//        }
 
         if let jsonSafe = json {
             do {
